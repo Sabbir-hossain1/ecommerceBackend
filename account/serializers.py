@@ -1,23 +1,34 @@
 from rest_framework import serializers
-from account.models import User
+from account.models import User,Profile
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
-    password2 = serializers.CharField(style={'input_type':'password'},write_only=True)
+class UserRegistrationSerializer(serializers.ModelSerializer):  
+    confirm_password = serializers.CharField(style={'input_type':'password'},write_only=True)  
     class Meta:
         model = User
-        fields = ['fullName','email', 'password', 'password2','tc']
+        fields = ['id','fullName','email', 'password','confirm_password','tc']  
         extra_kwargs = {
             'password':{'write_only':True}
         }
 
     def validate(self, attrs):
         password = attrs.get('password')
-        password2 = attrs.get('password2')
-        if password != password2:
-            raise serializers.ValidationError('password and confirm password does not match')
-        return attrs  
-        
-    def create(self, validated_data):
-        validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
-        return user
+        confirm_password = attrs.get('confirm_password')
+        if password != confirm_password:
+            raise serializers.ValidationError('Password and confirm password does not match')
+
+        return attrs
+
+    def create(self, validate_data):
+        return User.objects.create_user(**validate_data)
+
+  
+class UserLoginSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(max_length=255)
+    class Meta:
+        model = User
+        fields = ['email', 'password']
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
